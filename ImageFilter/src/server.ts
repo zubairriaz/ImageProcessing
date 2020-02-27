@@ -1,6 +1,7 @@
-import express from 'express';
+import express, { response } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import { truncateSync } from 'fs';
 
 (async () => {
 
@@ -33,10 +34,36 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   
   // Root Endpoint
   // Displays a simple message to the user
+
   app.get( "/", async ( req, res ) => {
     res.send("try GET /filteredimage?image_url={{}}")
   } );
   
+
+  app.get( "/filteredimage", async ( req, res ) => {
+    console.log("hit");
+    let {image_url} = req.query;
+    let reg = new RegExp("^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$");
+    if(image_url && reg.test(image_url)){
+     try{
+      let image = await filterImageFromURL(image_url);
+      res.status(200).sendFile(image);
+      res.on('finish', function() {
+        deleteLocalFiles([image]);
+     });
+     }catch(err){
+      res.status(422).send({message:"The image cannot be processed"});
+
+     } 
+     
+     
+  
+    }else{
+      res.status(400).send({message:"Invalid Url for the image is given"});
+    }
+
+
+ });
 
   // Start the Server
   app.listen( port, () => {
