@@ -56,8 +56,6 @@ import { truncateSync } from 'fs';
 
      } 
      
-     
-  
     }else{
       res.status(400).send({message:"Invalid Url for the image is given"});
     }
